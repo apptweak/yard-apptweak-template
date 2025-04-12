@@ -1,8 +1,8 @@
-require "set"
+# frozen_string_literal: true
 
 include Helpers::ModuleHelper
 
-MANIFEST_FILENAME = "coverage.manifest".freeze
+MANIFEST_FILENAME = "coverage.manifest"
 
 def init
   list_all_classes
@@ -40,11 +40,10 @@ end
 
 def list_all_classes
   # versions = Set.new
-  klasses = []
-  class_objects.each do |object|
+  klasses = class_objects.map do |object|
     # version_tag = object.tag(:version)
     # versions << version_tag.text if version_tag
-    klasses << namespace_definition(object)
+    namespace_definition(object)
   end
   # puts klasses.sort.join("\n")
   puts klasses.sort.join

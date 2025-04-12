@@ -1,8 +1,8 @@
-require "set"
+# frozen_string_literal: true
 
 include Helpers::ModuleHelper
 
-MANIFEST_FILENAME = "coverage.manifest".freeze
+MANIFEST_FILENAME = "coverage.manifest"
 
 def init
   find_all_versions

@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 require "fileutils"
-require "set"
 
 include Helpers::ModuleHelper
 
-MANIFEST_FILENAME = "coverage.manifest".freeze
+MANIFEST_FILENAME = "coverage.manifest"
 
 def init
   generate_manifest

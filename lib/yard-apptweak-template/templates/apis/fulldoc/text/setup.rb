@@ -1,4 +1,4 @@
-require "set"
+# frozen_string_literal: true
 
 include Helpers::ModuleHelper
 

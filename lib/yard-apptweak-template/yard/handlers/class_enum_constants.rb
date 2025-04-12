@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApptweakTemplateYARD
   class ClassEnumConstantHandler < YARD::Handlers::C::Base
     MATCH = /\bDEFINE_RUBY_CLASS_ENUM\s*\(([^,]+)\s*,\s*(\w+)\s*\)\s*;/xm

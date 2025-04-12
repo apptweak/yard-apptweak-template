@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApptweakTemplateYARD
   class GlobalConstantHandler < YARD::Handlers::C::Base
     MATCH = /\bDEFINE_RUBY_(?:(?:NAMED_)?CONSTANT|ENUM)\s*\((?:[^)]+,\s*)?(\w+)\)\s*;/xm

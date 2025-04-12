@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Helpers:
 
 # Copy verbatim an asset file to the target output. By default it uses the

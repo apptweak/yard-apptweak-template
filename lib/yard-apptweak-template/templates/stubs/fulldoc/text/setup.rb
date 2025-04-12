@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 require "fileutils"
 require "pathname"
-require "set"
 require "stringio"
 
 include Helpers::ModuleHelper
@@ -218,7 +219,7 @@ end
 
 # NOTE: This may modify the docstring of the object.
 def generate_method_signature(object)
-  signature = "#{object.name}"
+  signature = object.name.to_s
   # If there is a single overload then use that as the parameter list. Many of
   # the SketchUp Ruby API methods will have this as it was safer to add an
   # @overload tag instead of renaming the function argument names.
@@ -301,6 +302,8 @@ class StubFile < File
   private
 
     TRAILING_WHITE_SPACE = /([\t ]+)$/
+    private_constant :TRAILING_WHITE_SPACE
+
     def trim_trailing_white_space(string)
       string.gsub(TRAILING_WHITE_SPACE, "")
     end
@@ -362,4 +365,4 @@ MANUAL_CONSTANT_GROUPS = [
     regex: /^ROP/,
     group: "ROP"
   }
-]
+].freeze

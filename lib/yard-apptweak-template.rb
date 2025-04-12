@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "yard"
 require "yard-apptweak-template/version"
 require "yard-apptweak-template/stubs/autoload"

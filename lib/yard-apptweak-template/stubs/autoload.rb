@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApptweakTemplateYARD
   module Stubs
     class AutoLoadGenerator

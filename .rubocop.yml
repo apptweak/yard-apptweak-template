@@ -2,6 +2,8 @@
 inherit_from: https://gist.githubusercontent.com/apptweak-ci/2aca83afffbcbe0c0bca2beaab1500c0/raw/.rubocop.yml
 
 require:
-  - rubocop-minitest
   - rubocop-rake
   - rubocop-yard
+
+Gemspec/RequireMFA:
+  Enabled: false

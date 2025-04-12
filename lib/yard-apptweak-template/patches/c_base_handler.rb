@@ -44,7 +44,8 @@ module YARD
             "rb_eNoMemError" => "NoMemoryError",
             "rb_eEncodingError" => "EncodingError",
             "rb_eSystemCallError" => "SystemCallError"
-          }
+          }.freeze
+          private_constant :PATCH_ERROR_NAME
       end
     end
   end

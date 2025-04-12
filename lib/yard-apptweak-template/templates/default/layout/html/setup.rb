@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Consider if this should simply replace the Classes list.
 
 # TODO(thomthom): Temporarily disabled until we have time to fully implement this.
