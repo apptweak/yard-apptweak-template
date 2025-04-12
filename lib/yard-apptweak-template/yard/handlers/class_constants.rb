@@ -1,4 +1,4 @@
-module SketchUpYARD
+module ApptweakTemplateYARD
   class ClassConstantHandler < YARD::Handlers::C::Base
 
     MATCH = %r{\bDEFINE_RUBY_CLASS_CONSTANT\s*\(([^,]+)\s*,\s*([^,]+)\s*,\s*(\w+)\s*\)\s*;}xm

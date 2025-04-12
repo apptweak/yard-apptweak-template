@@ -1,4 +1,4 @@
-module SketchUpYARD
+module ApptweakTemplateYARD
   module Stubs
     class AutoLoadGenerator
 

@@ -7,7 +7,7 @@ require "yard-apptweak-template/yard/handlers/global_constants"
 require "yard-apptweak-template/yard/html_helper"
 require "yard-apptweak-template/patches/c_base_handler"
 
-module SketchUpYARD
+module ApptweakTemplateYARD
   def self.init
     # https://github.com/burtlo/yard-cucumber/blob/master/lib/yard-cucumber.rb
     # This registered template works for yardoc
@@ -31,4 +31,4 @@ module SketchUpYARD
   end
 end
 
-SketchUpYARD.init
+ApptweakTemplateYARD.init

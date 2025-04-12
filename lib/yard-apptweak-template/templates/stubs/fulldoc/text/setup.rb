@@ -27,7 +27,7 @@ def generate_stubs
 end
 
 def generate_autoloader(namespace_objects)
-  generator = SketchUpYARD::Stubs::AutoLoadGenerator.new
+  generator = ApptweakTemplateYARD::Stubs::AutoLoadGenerator.new
   autoload_file = File.join(stubs_gem_path, 'sketchup.rb')
   File.open(autoload_file, 'w') do |file|
     generator.generate(namespace_objects, file)
