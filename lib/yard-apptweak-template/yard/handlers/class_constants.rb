@@ -1,7 +1,6 @@
 module ApptweakTemplateYARD
   class ClassConstantHandler < YARD::Handlers::C::Base
-
-    MATCH = %r{\bDEFINE_RUBY_CLASS_CONSTANT\s*\(([^,]+)\s*,\s*([^,]+)\s*,\s*(\w+)\s*\)\s*;}xm
+    MATCH = /\bDEFINE_RUBY_CLASS_CONSTANT\s*\(([^,]+)\s*,\s*([^,]+)\s*,\s*(\w+)\s*\)\s*;/xm
     handles MATCH
     statement_class BodyStatement
 
@@ -12,6 +11,5 @@ module ApptweakTemplateYARD
         handle_constants(type, klass_name, const_name, value)
       end
     end
-
   end
 end

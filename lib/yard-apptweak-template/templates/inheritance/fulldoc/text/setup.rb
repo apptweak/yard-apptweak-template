@@ -1,13 +1,12 @@
-require 'set'
+require "set"
 
 include Helpers::ModuleHelper
 
-MANIFEST_FILENAME = 'coverage.manifest'.freeze
+MANIFEST_FILENAME = "coverage.manifest".freeze
 
 def init
   list_all_classes
 end
-
 
 def all_objects
   run_verifier(Registry.all)
@@ -19,10 +18,9 @@ end
 
 def namespace_definition(object)
   return if object.root?
+
   definition = "#{object.type} #{object.path}"
-  if object.type == :class && object.superclass.name != :Object
-    definition << " < #{object.superclass.path}"
-  end
+  definition << " < #{object.superclass.path}" if object.type == :class && object.superclass.name != :Object
   output = StringIO.new
   # output.puts generate_docstring(object)
   output.puts definition
@@ -31,23 +29,23 @@ end
 
 def generate_mixins(object, scope)
   output = StringIO.new
-  mixin_type = (scope == :class) ? 'extend' : 'include'
+  mixin_type = scope == :class ? "extend" : "include"
   mixins = run_verifier(object.mixins(scope))
   mixins = stable_sort_by(mixins, &:path)
-  mixins.each { |mixin|
+  mixins.each do |mixin|
     output.puts "  #{mixin_type} #{mixin.path}"
-  }
+  end
   output.string
 end
 
 def list_all_classes
   # versions = Set.new
   klasses = []
-  class_objects.each { |object|
+  class_objects.each do |object|
     # version_tag = object.tag(:version)
     # versions << version_tag.text if version_tag
     klasses << namespace_definition(object)
-  }
+  end
   # puts klasses.sort.join("\n")
   puts klasses.sort.join
   exit # Avoid the YARD summary

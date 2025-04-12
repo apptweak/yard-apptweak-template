@@ -9,6 +9,7 @@ end
 
 def api
   return unless object.has_tag?(:api)
+
   # Displays a a message warning the user that the API is not stable.
   erb(:api)
 end
