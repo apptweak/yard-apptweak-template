@@ -1,0 +1,20 @@
+name: Publish gem from pushed tags
+on:
+  push:
+    tags:
+      # any tag names starting with 'v'
+      - 'v*'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+          - '3.3'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Gems release
+      uses: apptweak/publish-gem-to-github@v2.4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
