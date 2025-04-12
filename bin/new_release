@@ -1,0 +1,219 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/inline"
+
+gemfile do
+  source "https://rubygems.org"
+
+  gem "pastel", "~> 0.8.0"
+  gem "tty-command", "~> 0.10.0"
+  gem "tty-prompt", "~> 0.23.0"
+  gem "apptweak-utils"
+  gem "gem-release", "~> 2.2.2"
+end
+
+require "apptweak-utils/styles"
+require "pathname"
+
+# This class will bump the current gem version, create a commit and a tag, following user
+# choices.
+class ReleaseManager
+  BRANCH_FOR_RELEASES = "main"
+  PROTECTED_MODE_VERSION_CHOICE = %w[beta patch].freeze
+  VERSION_CHOICE = (%w[major minor patch] | PROTECTED_MODE_VERSION_CHOICE).freeze
+
+  GEMS = {
+    yard_apptweak_template: {
+      name: "yard-apptweak-template",
+      file: "lib/yard-apptweak-template/version.rb"
+    }
+  }.freeze
+
+  # This method will do everything needed to actually release the gem. It is an interactive
+  # method and expects to be able to prompt the user about some options.
+  #
+  # @return [void]
+  def do!
+    puts Apptweak::Styles.info.call("Hi! I'm your friendly release script.")
+
+    check_if_in_correct_directory
+    check_for_changes
+
+    max_version_number = versions.map(&:from).map { |v| Gem::Version.new(v) }.max.to_s
+    max_version = versions.find { |v| v.from == max_version_number }
+
+    puts Apptweak::Styles.info.call("The latest version I found was: ") + Apptweak::Styles.warn.call(max_version_number)
+    version_bump = prompt.select("How much do you want to bump the version?", protected_mode? ? PROTECTED_MODE_VERSION_CHOICE : VERSION_CHOICE)
+
+    max_version.version = version_bump
+    @to = max_version.to
+    puts Apptweak::Styles.info.call("Okay. If you continue, I will bump the following versions:")
+    versions.each do |v|
+      puts Apptweak::Styles.warn.call(v.send(:name)) +
+           Apptweak::Styles.info.call(" From: ") +
+           Apptweak::Styles.warn.call(v.from) +
+           Apptweak::Styles.info.call(" To: ") +
+           Apptweak::Styles.warn.call(to)
+    end
+    puts Apptweak::Styles.info.call("Any gem not listed above will stay in the same version.")
+    should_stop = prompt.no?("Should I continue?")
+    exit(0) if should_stop
+
+    bump_versions
+    bundle_for_new_versions
+
+    puts Apptweak::Styles.info.call("I will now create a commit and the tag for the new release.")
+
+    create_commit_and_tag
+
+    puts Apptweak::Styles.info.call("Alrite! We're almost there.")
+    should_push = prompt.yes?("Should I push this to origin?")
+
+    push_to_origin_and_open_release if should_push
+
+    puts Apptweak::Styles.success.call("Success!")
+    puts Apptweak::Styles.info.call("With the new tags pushed to Github, the \"Publish Gems\" GitHub Action on apptweak-utils repo will be triggered and will publish a new version of the gem(s).")
+  end
+
+  private
+
+    attr_reader :to
+
+    # @return [TTY::Prompt]
+    def prompt
+      @prompt ||= TTY::Prompt.new(interrupt: :exit)
+    end
+
+    # This will give you a TTY::Command that does not print
+    #
+    # @return [TTY::Command] the runner
+    def silent_runner
+      TTY::Command.new(printer: :null)
+    end
+
+    # This will give you a TTY::Command
+    #
+    # @return [TTY::Command] the runner
+    def runner
+      TTY::Command.new
+    end
+
+    # Checks for changes in the repo. Might exit if the user decides to stop or if can't find git
+    # @return [void]
+    def check_for_changes
+      out, _err = silent_runner.run("git status --porcelain")
+      if out && !out.strip.empty?
+        prompt = TTY::Prompt.new
+        should_stop = prompt.no?(Apptweak::Styles.error.call("It seems you have uncommited changes and it's not advised to start a release in this state. Are you sure you want to continue?"))
+        exit if should_stop
+        puts ""
+      end
+    rescue TTY::Command::ExitError
+      puts Apptweak::Styles.error.call("Could not check git status. Are you sure you are in a repository?")
+      exit 1
+    end
+
+    # Returns the current branch
+    # @return [String] current branch name
+    def current_branch
+      @current_branch ||= begin
+        current_branch, _err = silent_runner.run("git branch --show-current")
+        current_branch.strip!
+      end
+    end
+
+    # Returns if the release manager should run in protected mode or not
+    # @return [Boolean]
+    def protected_mode?
+      @protected_mode ||= if current_branch == BRANCH_FOR_RELEASES
+        false
+      else
+        puts Apptweak::Styles.warn.call("You're not in the branch rated for release, so I'll run in protected mode!")
+        puts Apptweak::Styles.info.call("You're currently in: #{Apptweak::Styles.info.call(current_branch)}.")
+        true
+      end
+    end
+
+    # Returns an array with the versions for all the gems, regardless of whether they were chosen to be bumped
+    # @return [Array<Gem::Release::Files::Version>] The versions of all gems
+    def versions
+      @versions ||= begin
+        v = []
+        v << Gem::Release::Files::Version.new(GEMS.dig(:yard_apptweak_template, :name), nil, { file: GEMS.dig(:yard_apptweak_template, :file) })
+        if v.empty?
+          puts Apptweak::Styles.error.call("Well, you didn't choose any version to bump, did you?")
+          exit(-1)
+        end
+
+        v
+      end
+    end
+
+    # Calls .bump for each of the versions
+    # @return [void]
+    def bump_versions
+      versions.each { |v| v.version = to }
+      versions.each(&:bump)
+    end
+
+    # Calls bundle install for the new version of the gem
+    # @return [void]
+    def bundle_for_new_versions
+      puts Apptweak::Styles.info.call("Checking for changes in #{GEMS.dig(:yard_apptweak_template, :name)}.")
+      silent_runner.run("bundle install")
+      check_nothing_else_changed_in_the_gemfile_lock
+    end
+
+    # Exits if there's other changes in the Gemfile.lock than the expected ones
+    # @return [void]
+    def check_nothing_else_changed_in_the_gemfile_lock
+      out, = silent_runner.run("git diff Gemfile.lock | grep -q \"^[+-] \" | cat") # The cat is to suppress the grep error if there's no match
+      accepted_lines = GEMS.values.map { |g| "#{g[:name]} (" } # This will create an array with something like ["apptweak-utils (", "apptweak-backend-utils ("]
+      changes = out.split("\n").reject { |line| accepted_lines.any? { |accepted| line[accepted] } }
+      return unless changes.present?
+
+      puts Apptweak::Styles.error.call("There's more changes than I expected in the Gemfile.lock. Aborting!")
+      puts Apptweak::Styles.info.call("Revert all my changes, run a `bundle install`, commit and then run me again.")
+      exit(-1)
+    end
+
+    # Creates a commit and tag with the given version
+    # @return [void]
+    def create_commit_and_tag
+      version_names = versions.map { |v| v.send(:name) }.join(", ")
+      commit_message = "Bump #{version_names} to #{to}"
+      versions.each do |v|
+        bumped_gem = GEMS.values.find { |g| g[:name] == v.send(:name) }
+        runner.run("git add #{bumped_gem[:file]}")
+      end
+      runner.run("git add Gemfile.lock")
+
+      runner.run("git commit -m '#{commit_message}'")
+      runner.run("git tag v#{to}")
+    end
+
+    # Pushes the branch and tag to origin
+    # @return [void]
+    def push_to_origin_and_open_release
+      runner.run("git push origin #{current_branch}")
+      runner.run("git push origin tag v#{to}")
+      begin
+        new_release_url = "https://github.com/apptweak/yard-apptweak-template/releases/new?tag=v#{to}"
+        runner.run("open #{new_release_url}")
+      rescue TTY::Command::ExitError
+        puts Apptweak::Styles.warn.call("I failed to open it, but please create a release for this version over at: #{new_release_url}")
+      end
+    end
+
+    # Checks if the script was called from the right directory. Will exit if not
+    # @return [void]
+    def check_if_in_correct_directory
+      return if Pathname.new("#{__dir__}/..").realdirpath == Pathname.new(Dir.pwd).realdirpath
+
+      puts Apptweak::Styles.error.call("Oops. You need to run this script in the root of the `apptweak-utils-ruby` repository. You should run it with `./bin/new_release`")
+      exit(2)
+    end
+end
+
+ReleaseManager.new.do!
