@@ -1,50 +1,92 @@
-# SketchUp Ruby API YARD Template
+# AppTweak Ruby YARD Template
 
-[![Gem Version](https://badge.fury.io/rb/yard-sketchup.svg)](https://badge.fury.io/rb/yard-sketchup)
+This is the customized YARD template that the AppTweak team can use to generate YARD documentation for their Ruby codebase. It is made available for easy re-use.
 
-This is the customized YARD template the SketchUp team uses to generate the [SketchUp Ruby API documentation](https://ruby.sketchup.com/).
+## Features
 
-It is made available for easy re-use. Using this gem a local copy of the documentation can be generated from our [SketchUp Ruby API stubs](https://github.com/SketchUp/ruby-api-stubs).
+- Custom styling aligned with AppTweak branding
+- Optimized layout for Ruby documentation
+- Improved navigation and searchability
 
-## Example Usage
+## Installation
 
-Make sure YARD and yard-sketchup are installed:
+Make sure YARD and yard-apptweak-template are installed:
 
-```
+```bash
 gem install yard
-gem install yard-sketchup
+gem install yard-apptweak-template
 ```
 
-Example `.yardopts` config:
+## Development Scripts
+
+The repository includes several utility scripts in the `bin` directory:
+
+### bin/setup
+Sets up the development environment by installing dependencies and configuring development hooks:
+```bash
+bin/setup
+```
+
+### bin/console
+Launches an interactive Ruby console with the gem already loaded:
+```bash
+bin/console
+```
+
+### bin/new_release
+Manages the release process for the gem, including version bumping, commit creation, and tagging:
+```bash
+bin/new_release
+```
+
+## Configuration
+
+Example `.yardopts` configuration file:
 
 ```
---title "SketchUp Ruby API Documentation"
+--title "AppTweak Ruby Documentation"
 --no-api
 --no-private
---plugin yard-sketchup
-SketchUp/**/*.rb
+--plugin yard-apptweak-template
+**/*.rb
 -
-pages/*.md
+docs/*.md
 ```
 
-The `assets` and `pages` directory can be found in the [SketchUp Ruby API stubs](https://github.com/SketchUp/ruby-api-stubs) repository.
+## Usage
 
-## Useful YARD Commands
+### Generate Documentation
+```bash
+yardoc --plugin apptweak-template
+```
 
-### TL;DR - YARD Usage
+### Exclude a Specific Version
+```bash
+yardoc --query '@version.text != "AppTweak 2018"'
+```
 
-**Note:** The Thor commands mentioned above are wrappers on top of these YARD
-commands.
+### Generate Stubs
+```bash
+yardoc -t stubs -f text
+```
 
-Generate API Documentation:
-`yardoc`
+### Generate Coverage Manifest
+```bash
+yardoc -t coverage -f text
+```
 
-Exclude a version:
+## Contributing
 
-`yardoc --query '@version.text != "SketchUp 2018"'`
+Contributions to improve this template are welcome. Please submit a pull request to discuss/challenge the proposed changes.
 
-Generate API Stubs:
-`yardoc -t stubs -f text`
 
-Generate coverage.manifest:
-`yardoc -t coverage -f text`
+## License
+
+Copyright (c) 2025 AppTweak. All rights reserved.
+
+## Contact
+
+This project is maintained by the AppTweak Developer Experience team.
+For questions or support, please contact the AppTweak DevEx team on Slack.
+
+Made with ❤️ by the AppTweak DevEx team
