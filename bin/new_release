@@ -16,7 +16,6 @@ end
 require "apptweak-utils/styles"
 require "pathname"
 
-
 # A utility class for managing the release process of Apptweak Ruby gems.
 # This class handles version bumping, commit creation, and tag management for gems
 # in the repository. It provides an interactive interface for selecting version
@@ -172,13 +171,11 @@ class ReleaseManager
     # @param error [ReleaseError] the error that triggered the rollback
     # @return [void]
     def rollback(error)
-      puts Apptweak::Styles.error.call("Error occurred during #{error.phase || 'unknown phase'}: #{error.message}")
+      puts Apptweak::Styles.error.call("Error occurred during #{error.phase || "unknown phase"}: #{error.message}")
       puts Apptweak::Styles.info.call("Rolling back changes...")
 
       # Always check for a created tag and remove it if it exists
-      if error.version && (error.phase == PHASES[:commit_tag] || error.phase == PHASES[:push])
-        delete_tag("v#{error.version}")
-      end
+      delete_tag("v#{error.version}") if error.version && (error.phase == PHASES[:commit_tag] || error.phase == PHASES[:push])
 
       # Check if any files were modified but not committed
       out, _err = silent_runner.run("git status --porcelain")
@@ -214,13 +211,13 @@ class ReleaseManager
     def delete_tag(tag_name)
       # Check if tag exists
       out, _err = silent_runner.run("git tag -l #{tag_name}")
-      if out && out.strip == tag_name
-        begin
-          silent_runner.run("git tag -d #{tag_name}")
-          puts Apptweak::Styles.info.call("Deleted tag #{tag_name}")
-        rescue => e
-          puts Apptweak::Styles.warn.call("Failed to delete tag #{tag_name}: #{e.message}")
-        end
+      return unless out && out.strip == tag_name
+
+      begin
+        silent_runner.run("git tag -d #{tag_name}")
+        puts Apptweak::Styles.info.call("Deleted tag #{tag_name}")
+      rescue => e
+        puts Apptweak::Styles.warn.call("Failed to delete tag #{tag_name}: #{e.message}")
       end
     end
 
@@ -295,9 +292,8 @@ class ReleaseManager
       silent_runner.run("bundle install")
       check_nothing_else_changed_in_the_gemfile_lock
     rescue => e
-      unless e.is_a?(ReleaseError)
-        raise ReleaseError.new("Failed to update bundle: #{e.message}", phase: PHASES[:bundle_install], version: to)
-      end
+      raise ReleaseError.new("Failed to update bundle: #{e.message}", phase: PHASES[:bundle_install], version: to) unless e.is_a?(ReleaseError)
+
       raise
     end
 
@@ -352,17 +348,17 @@ class ReleaseManager
 
       # Handle opening the GitHub Releases page
       new_release_url = "https://github.com/#{REPO_NAME}/releases/new?tag=v#{to}"
-      unless to.include?("beta")
-        begin
-          runner.run("open #{new_release_url}")
-        rescue TTY::Command::ExitError => e
-          puts Apptweak::Styles.warn.call("Failed to open the GitHub release page: #{e.message}")
-          puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
-        rescue => e
-          # Catch any other unexpected errors when opening the URL
-          puts Apptweak::Styles.warn.call("Unexpected error when opening release page: #{e.message}")
-          puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
-        end
+      return if to.include?("beta")
+
+      begin
+        runner.run("open #{new_release_url}")
+      rescue TTY::Command::ExitError => e
+        puts Apptweak::Styles.warn.call("Failed to open the GitHub release page: #{e.message}")
+        puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
+      rescue => e
+        # Catch any other unexpected errors when opening the URL
+        puts Apptweak::Styles.warn.call("Unexpected error when opening release page: #{e.message}")
+        puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
       end
     end
 
