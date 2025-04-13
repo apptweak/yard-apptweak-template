@@ -100,7 +100,7 @@ class ReleaseManager
     push_to_origin_and_open_release if should_push
 
     puts Apptweak::Styles.success.call("Success!")
-    puts Apptweak::Styles.info.call("With the new tags pushed to Github, the \"Publish Gems\" GitHub Action on apptweak-utils repo will be triggered and will publish a new version of the gem(s).")
+    puts Apptweak::Styles.info.call("With the new tags pushed to Github, the \"Publish Gems\" GitHub Action on this repository will be triggered and will publish a new version of the gem(s).")
   rescue ReleaseError => e
     rollback(e)
     exit(1)
@@ -202,7 +202,7 @@ class ReleaseManager
       out, _err = silent_runner.run("git status --porcelain")
       if out && !out.strip.empty?
         prompt = TTY::Prompt.new
-        should_stop = prompt.no?(Apptweak::Styles.error.call("It seems you have uncommited changes and it's not advised to start a release in this state. Are you sure you want to continue?"))
+        should_stop = prompt.no?(Apptweak::Styles.error.call("It seems you have uncommitted changes and it's not advised to start a release in this state. Are you sure you want to continue?"))
         exit if should_stop
         puts ""
       end
@@ -311,9 +311,9 @@ class ReleaseManager
       runner.run("git push origin #{current_branch}")
       runner.run("git push origin tag v#{to}")
       new_release_url = "https://github.com/apptweak/yard-apptweak-template/releases/new?tag=v#{to}"
-      runner.run("open #{new_release_url}")
+      runner.run("open #{new_release_url}") unless to.include?("beta")
     rescue TTY::Command::ExitError
-      puts Apptweak::Styles.warn.call("I failed to open it, but please create a release for this version over at: #{new_release_url}")
+      puts Apptweak::Styles.warn.call("wailed to open the GH release page, but please create a release for this version over at: #{new_release_url}")
     rescue => e
       raise ReleaseError.new("Failed to push to origin: #{e.message}", phase: PHASES[:push], version: to)
     end
@@ -321,9 +321,11 @@ class ReleaseManager
     # Checks if the script was called from the right directory. Will exit if not
     # @return [void]
     def check_if_in_correct_directory
-      return if Pathname.new("#{__dir__}/..").realdirpath == Pathname.new(Dir.pwd).realdirpath
+      parent_dir = Pathname.new("#{__dir__}/..").realdirpath
+      current_dir = Pathname.new(Dir.pwd).realdirpath
+      return if parent_dir == current_dir
 
-      puts Apptweak::Styles.error.call("Oops. You need to run this script in the root of the `apptweak-utils-ruby` repository. You should run it with `./bin/new_release`")
+      puts Apptweak::Styles.error.call("Oops. You need to run this script in the root of the `#{parent_dir.basename}` repository. You should run it with `./bin/new_release`")
       exit(2)
     end
 end
