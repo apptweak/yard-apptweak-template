@@ -22,6 +22,11 @@ end
 
 require "rouge"
 
+# Generates assets for the documentation.
+#
+# @return [void]
+# @note This method overrides the default YARD asset generation to add custom
+#   syntax highlighting via Rouge.
 def generate_assets
   super
 
