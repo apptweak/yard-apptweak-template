@@ -67,7 +67,7 @@ class ReleaseManager
   GEMS = {
     yard_apptweak_template: {
       name: "yard-apptweak-template",
-      file: "lib/yard_apptweak_template/version.rb"
+      file: "lib/yard-apptweak-template/version.rb"
     }
   }.freeze
 

@@ -3,7 +3,7 @@
 lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
-require_relative "lib/yard_apptweak_template/version"
+require "yard-apptweak-template/version"
 require "bundler"
 
 Gem::Specification.new do |spec|

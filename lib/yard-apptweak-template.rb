@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require "yard"
-require_relative "yard_apptweak_template/version"
-require_relative "yard_apptweak_template/stubs/autoload"
-require_relative "yard_apptweak_template/yard/handlers/class_constants"
-require_relative "yard_apptweak_template/yard/handlers/class_enum_constants"
-require_relative "yard_apptweak_template/yard/handlers/global_constants"
-require_relative "yard_apptweak_template/yard/html_helper"
-require_relative "yard_apptweak_template/patches/c_base_handler"
+require_relative "yard-apptweak-template/version"
+require_relative "yard-apptweak-template/stubs/autoload"
+require_relative "yard-apptweak-template/yard/handlers/class_constants"
+require_relative "yard-apptweak-template/yard/handlers/class_enum_constants"
+require_relative "yard-apptweak-template/yard/handlers/global_constants"
+require_relative "yard-apptweak-template/yard/html_helper"
+require_relative "yard-apptweak-template/patches/c_base_handler"
 
 module ApptweakTemplateYARD
   def self.init
