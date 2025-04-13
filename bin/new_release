@@ -73,7 +73,7 @@ class ReleaseManager
     max_version_number = versions.map(&:from).map { |v| Gem::Version.new(v) }.max.to_s
     max_version = versions.find { |v| v.from == max_version_number }
 
-    puts Apptweak::Styles.info.call("The latest version I found was: ") + Apptweak::Styles.warn.call(max_version_number)
+    puts Apptweak::Styles.info.call("The latest version found was: ") + Apptweak::Styles.warn.call(max_version_number)
     version_bump = prompt.select("How much do you want to bump the version?", protected_mode? ? PROTECTED_MODE_VERSION_CHOICE : VERSION_CHOICE)
 
     max_version.version = version_bump

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module ApptweakTemplateYARD
-  VERSION = "1.6.0.beta.2"
+  VERSION = "1.6.0.beta.1"
 end
