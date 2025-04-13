@@ -30,10 +30,10 @@ def generate_assets
   # Pastie
   asset("css/rouge.css", Rouge::Themes::IgorPro.render(scope: "pre.code.cpp"))
 
-  copy("favicon.ico")
-  copy("images/sketchup-logo.svg")
-  copy("images/trimble-logo-white.svg")
-  copy("images/Ruby.svg")
+  # copy("favicon.ico")
+  # copy("images/sketchup-logo.svg")
+  # copy("images/trimble-logo-white.svg")
+  # copy("images/Ruby.svg")
 end
 
 # Custom search list grouping the classes in the API into similar groups.
