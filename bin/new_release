@@ -16,8 +16,35 @@ end
 require "apptweak-utils/styles"
 require "pathname"
 
-# This class will bump the current gem version, create a commit and a tag, following user
-# choices.
+
+# A utility class for managing the release process of Apptweak Ruby gems.
+# This class handles version bumping, commit creation, and tag management for gems
+# in the repository. It provides an interactive interface for selecting version
+# bump types, confirming changes, and pushing to GitHub.
+#
+# The script performs several steps:
+# 1. Checks if the working directory is clean and in the correct directory
+# 2. Identifies the current version and prompts for bump type (major/minor/patch or beta)
+# 3. Updates version files in all affected gems and runs bundle install to update Gemfile.lock
+# 4. Creates a commit with the version changes and tags the release with the version number
+# 5. Optionally pushes to GitHub and opens the release page (except for beta versions)
+#
+# The script includes rollback capabilities in case of errors during the release process.
+# If an error occurs at any stage, the script will attempt to revert changes by resetting
+# to the initial state, ensuring the repository remains in a clean and consistent state.
+# The initial state captures the current branch and commit SHA at the beginning of the process,
+# allowing to run git-reset to restore the initial state if something goes wrong.
+#
+# When running on a not-main branch (protected mode), the script restricts version bump options
+# to only beta releases as a safety measure to prevent accidental major releases
+# from development branches.
+#
+# After a successful release, a GitHub Action will be triggered to publish the new gem version
+# to the GitHub Package Registry.
+#
+# @example Basic usage
+#   ReleaseManager.new.do!
+#
 class ReleaseManager
   class BaseError < StandardError; end
 
