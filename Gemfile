@@ -15,7 +15,7 @@ group :development do
   gem "lefthook", "~> 1.8", require: false
   gem "pronto", "~> 0.11.1", require: false
   gem "pronto-rubocop", require: false
-  gem "rackup", require: false
+  gem "webrick", require: false
   gem "rubocop", "~> 1.68", require: false
   gem "rubocop-performance", "~> 1.22", require: false
   gem "rubocop-rake", "~> 0.6", require: false
