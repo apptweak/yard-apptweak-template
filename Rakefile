@@ -1,6 +1,8 @@
-require 'bundler/gem_tasks'
+# frozen_string_literal: true
 
-Dir['tasks/**/*.rake'].each { |task_file| load task_file }
+require "bundler/gem_tasks"
+
+Dir["tasks/**/*.rake"].each { |task_file| load task_file }
 
 task default: %i[
   build

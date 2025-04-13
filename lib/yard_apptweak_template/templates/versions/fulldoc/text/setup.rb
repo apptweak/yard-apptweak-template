@@ -1,0 +1,23 @@
+# frozen_string_literal: true
+
+include Helpers::ModuleHelper
+
+MANIFEST_FILENAME = "coverage.manifest"
+
+def init
+  find_all_versions
+end
+
+def all_objects
+  run_verifier(Registry.all)
+end
+
+def find_all_versions
+  versions = Set.new
+  all_objects.each do |object|
+    version_tag = object.tag(:version)
+    versions << version_tag.text if version_tag
+  end
+  puts versions.sort.join("\n")
+  exit # Avoid the YARD summary
+end

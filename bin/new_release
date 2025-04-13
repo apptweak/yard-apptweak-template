@@ -1,0 +1,381 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/inline"
+
+gemfile do
+  source "https://rubygems.org"
+
+  gem "pastel", "~> 0.8.0"
+  gem "tty-command", "~> 0.10.0"
+  gem "tty-prompt", "~> 0.23.0"
+  gem "apptweak-utils"
+  gem "gem-release", "~> 2.2.2"
+end
+
+require "apptweak-utils/styles"
+require "pathname"
+
+
+# A utility class for managing the release process of Apptweak Ruby gems.
+# This class handles version bumping, commit creation, and tag management for gems
+# in the repository. It provides an interactive interface for selecting version
+# bump types, confirming changes, and pushing to GitHub.
+#
+# The script performs several steps:
+# 1. Checks if the working directory is clean and in the correct directory
+# 2. Identifies the current version and prompts for bump type (major/minor/patch or beta)
+# 3. Updates version files in all affected gems and runs bundle install to update Gemfile.lock
+# 4. Creates a commit with the version changes and tags the release with the version number
+# 5. Optionally pushes to GitHub and opens the release page (except for beta versions)
+#
+# The script includes rollback capabilities in case of errors during the release process.
+# If an error occurs at any stage, the script will attempt to revert changes by resetting
+# to the initial state, ensuring the repository remains in a clean and consistent state.
+# The initial state captures the current branch and commit SHA at the beginning of the process,
+# allowing to run git-reset to restore the initial state if something goes wrong.
+#
+# When running on a not-main branch (protected mode), the script restricts version bump options
+# to only beta releases as a safety measure to prevent accidental major releases
+# from development branches.
+#
+# After a successful release, a GitHub Action will be triggered to publish the new gem version
+# to the GitHub Package Registry.
+#
+# @example Basic usage
+#   ReleaseManager.new.do!
+#
+class ReleaseManager
+  class BaseError < StandardError; end
+
+  # Custom error class for release-related errors
+  class ReleaseError < BaseError
+    attr_reader :phase, :version
+
+    def initialize(message, phase: nil, version: nil)
+      @phase = phase
+      @version = version
+      super(message)
+    end
+  end
+
+  REPO_NAME = "apptweak/yard-apptweak-template"
+  BRANCH_FOR_RELEASES = "main"
+  PROTECTED_MODE_VERSION_CHOICE = %w[beta patch].freeze
+  VERSION_CHOICE = (%w[major minor patch] | PROTECTED_MODE_VERSION_CHOICE).freeze
+
+  GEMS = {
+    yard_apptweak_template: {
+      name: "yard-apptweak-template",
+      file: "lib/yard-apptweak-template/version.rb"
+    }
+  }.freeze
+
+  # Release phases for tracking progress
+  PHASES = {
+    init: "initialize",
+    version_bump: "version_bump",
+    bundle_install: "bundle_install",
+    commit_tag: "commit_and_tag",
+    push: "push_to_github"
+  }.freeze
+
+  # This method will do everything needed to actually release the gem. It is an interactive
+  # method and expects to be able to prompt the user about some options.
+  #
+  # @return [void]
+  def do!
+    puts Apptweak::Styles.info.call("Hi! I'm your friendly release script.")
+
+    # Store initial state for potential rollback
+    @initial_state = {
+      branch: current_branch,
+      commit_sha: get_current_commit_sha
+    }
+    @current_phase = PHASES[:init]
+
+    check_if_in_correct_directory
+    check_for_changes
+
+    max_version_number = versions.map(&:from).map { |v| Gem::Version.new(v) }.max.to_s
+    max_version = versions.find { |v| v.from == max_version_number }
+
+    puts Apptweak::Styles.info.call("The latest version found was: ") + Apptweak::Styles.warn.call(max_version_number)
+    version_bump = prompt.select("How much do you want to bump the version?", protected_mode? ? PROTECTED_MODE_VERSION_CHOICE : VERSION_CHOICE)
+
+    max_version.version = version_bump
+    @to = max_version.to
+    puts Apptweak::Styles.info.call("Okay. If you continue, I will bump the following versions:")
+    versions.each do |v|
+      puts Apptweak::Styles.warn.call(v.send(:name)) +
+           Apptweak::Styles.info.call(" From: ") +
+           Apptweak::Styles.warn.call(v.from) +
+           Apptweak::Styles.info.call(" To: ") +
+           Apptweak::Styles.warn.call(to)
+    end
+    puts Apptweak::Styles.info.call("Any gem not listed above will stay in the same version.")
+    should_stop = prompt.no?("Should I continue?")
+    exit(0) if should_stop
+
+    bump_versions
+    bundle_for_new_versions
+
+    puts Apptweak::Styles.info.call("I will now create a commit and the tag for the new release.")
+    create_commit_and_tag
+
+    puts Apptweak::Styles.info.call("Alrite! We're almost there.")
+    should_push = prompt.yes?("Should I push this to origin?")
+    push_to_origin_and_open_release if should_push
+
+    puts Apptweak::Styles.success.call("Success!")
+    puts Apptweak::Styles.info.call("With the new tag pushed to Github, the \"Publish Gems\" GitHub Action on this repository will be triggered and will publish a new version of the gem(s).")
+  rescue ReleaseError => e
+    rollback(e)
+    exit(1)
+  rescue => e
+    # For any other errors, perform a more generalized rollback
+    rollback(ReleaseError.new("Unexpected error: #{e.message}", phase: current_phase, version: to))
+    exit(1)
+  end
+
+  private
+
+    attr_reader :to, :current_phase, :initial_state
+
+    # @return [TTY::Prompt]
+    def prompt
+      @prompt ||= TTY::Prompt.new(interrupt: :exit)
+    end
+
+    # This will give you a TTY::Command that does not print
+    #
+    # @return [TTY::Command] the runner
+    def silent_runner
+      TTY::Command.new(printer: :null)
+    end
+
+    # This will give you a TTY::Command
+    #
+    # @return [TTY::Command] the runner
+    def runner
+      TTY::Command.new
+    end
+
+    # Get current commit SHA for potential rollback
+    # @return [String] current commit SHA
+    def get_current_commit_sha
+      sha, _err = silent_runner.run("git rev-parse HEAD")
+      sha.strip
+    end
+
+    # Rollback any changes made during the release process based on the error phase
+    # @param error [ReleaseError] the error that triggered the rollback
+    # @return [void]
+    def rollback(error)
+      puts Apptweak::Styles.error.call("Error occurred during #{error.phase || 'unknown phase'}: #{error.message}")
+      puts Apptweak::Styles.info.call("Rolling back changes...")
+
+      # Always check for a created tag and remove it if it exists
+      if error.version && (error.phase == PHASES[:commit_tag] || error.phase == PHASES[:push])
+        delete_tag("v#{error.version}")
+      end
+
+      # Check if any files were modified but not committed
+      out, _err = silent_runner.run("git status --porcelain")
+      if out && !out.strip.empty?
+        # Reset any modified files
+        silent_runner.run("git reset --hard HEAD")
+        puts Apptweak::Styles.info.call("Reset modified files")
+      end
+
+      # Check if we created a new commit that needs to be reverted
+      if error.phase == PHASES[:commit_tag] || error.phase == PHASES[:push]
+        current_sha, _err = silent_runner.run("git rev-parse HEAD")
+        if current_sha.strip != initial_state[:commit_sha]
+          # Revert to original commit
+          silent_runner.run("git reset --hard #{initial_state[:commit_sha]}")
+          puts Apptweak::Styles.info.call("Reset to original commit")
+        end
+      end
+
+      # If we switched branches, go back to the original branch
+      current_branch_now, _err = silent_runner.run("git branch --show-current")
+      if current_branch_now.strip != initial_state[:branch]
+        silent_runner.run("git checkout #{initial_state[:branch]}")
+        puts Apptweak::Styles.info.call("Switched back to branch #{initial_state[:branch]}")
+      end
+
+      puts Apptweak::Styles.success.call("Rollback completed successfully")
+    end
+
+    # Delete a git tag in a safe manner
+    # @param tag_name [String] name of the tag to delete
+    # @return [void]
+    def delete_tag(tag_name)
+      # Check if tag exists
+      out, _err = silent_runner.run("git tag -l #{tag_name}")
+      if out && out.strip == tag_name
+        begin
+          silent_runner.run("git tag -d #{tag_name}")
+          puts Apptweak::Styles.info.call("Deleted tag #{tag_name}")
+        rescue => e
+          puts Apptweak::Styles.warn.call("Failed to delete tag #{tag_name}: #{e.message}")
+        end
+      end
+    end
+
+    # Checks for changes in the repo. Might exit if the user decides to stop or if can't find git
+    # @return [void]
+    def check_for_changes
+      out, _err = silent_runner.run("git status --porcelain")
+      if out && !out.strip.empty?
+        prompt = TTY::Prompt.new
+        should_stop = prompt.no?(Apptweak::Styles.error.call("It seems you have uncommitted changes and it's not advised to start a release in this state. Are you sure you want to continue?"))
+        exit if should_stop
+        puts ""
+      end
+    rescue TTY::Command::ExitError
+      puts Apptweak::Styles.error.call("Could not check git status. Are you sure you are in a repository?")
+      exit 1
+    end
+
+    # Returns the current branch
+    # @return [String] current branch name
+    def current_branch
+      @current_branch ||= begin
+        current_branch, _err = silent_runner.run("git branch --show-current")
+        current_branch.strip!
+      end
+    end
+
+    # Returns if the release manager should run in protected mode or not
+    # @return [Boolean]
+    def protected_mode?
+      @protected_mode ||= if current_branch == BRANCH_FOR_RELEASES
+        false
+      else
+        puts Apptweak::Styles.warn.call("You're not in the branch rated for release, so I'll run in protected mode!")
+        puts Apptweak::Styles.info.call("You're currently in: #{Apptweak::Styles.info.call(current_branch)}.")
+        true
+      end
+    end
+
+    # Returns an array with the versions for all the gems, regardless of whether they were chosen to be bumped
+    # @return [Array<Gem::Release::Files::Version>] The versions of all gems
+    def versions
+      @versions ||= begin
+        v = []
+        v << Gem::Release::Files::Version.new(GEMS.dig(:yard_apptweak_template, :name), nil, { file: GEMS.dig(:yard_apptweak_template, :file) })
+        if v.empty?
+          puts Apptweak::Styles.error.call("Well, you didn't choose any version to bump, did you?")
+          exit(-1)
+        end
+
+        v
+      end
+    end
+
+    # Calls .bump for each of the versions
+    # @return [void]
+    def bump_versions
+      @current_phase = PHASES[:version_bump]
+      versions.each { |v| v.version = to }
+      versions.each(&:bump)
+    rescue => e
+      raise ReleaseError.new("Failed to bump versions: #{e.message}", phase: PHASES[:version_bump], version: to)
+    end
+
+    # Calls bundle install for the new version of the gem
+    #
+    # @raise [ReleaseError] if the bundle install fails
+    # @return [void]
+    def bundle_for_new_versions
+      @current_phase = PHASES[:bundle_install]
+      puts Apptweak::Styles.info.call("Checking for changes in #{GEMS.dig(:yard_apptweak_template, :name)}.")
+      silent_runner.run("bundle install")
+      check_nothing_else_changed_in_the_gemfile_lock
+    rescue => e
+      unless e.is_a?(ReleaseError)
+        raise ReleaseError.new("Failed to update bundle: #{e.message}", phase: PHASES[:bundle_install], version: to)
+      end
+      raise
+    end
+
+    # Exits if there's other changes in the Gemfile.lock than the expected ones
+    #
+    # @raise [ReleaseError] if there's other changes in the Gemfile.lock than the expected ones
+    # @return [void]
+    def check_nothing_else_changed_in_the_gemfile_lock
+      out, = silent_runner.run("git diff Gemfile.lock | grep -q \"^[+-] \" | cat") # The cat is to suppress the grep error if there's no match
+      accepted_lines = GEMS.values.map { |g| "#{g[:name]} (" } # This will create an array with something like ["apptweak-utils (", "apptweak-backend-utils ("]
+      changes = out.split("\n").reject { |line| accepted_lines.any? { |accepted| line[accepted] } }
+      return unless changes.present?
+
+      error_message = "There's more changes than expected in the Gemfile.lock."
+      puts Apptweak::Styles.error.call(error_message)
+      puts Apptweak::Styles.info.call("Revert all my changes, run a `bundle install`, commit and then run me again.")
+
+      raise ReleaseError.new(error_message, phase: PHASES[:bundle_install], version: to)
+    end
+
+    # Creates a commit and tag with the given version
+    #
+    # @raise [ReleaseError] if the commit or tag creation fails
+    # @return [void]
+    def create_commit_and_tag
+      @current_phase = PHASES[:commit_tag]
+      version_names = versions.map { |v| v.send(:name) }.join(", ")
+      commit_message = "Bump #{version_names} to #{to}"
+      versions.each do |v|
+        bumped_gem = GEMS.values.find { |g| g[:name] == v.send(:name) }
+        runner.run("git add #{bumped_gem[:file]}")
+      end
+
+      runner.run("git add Gemfile.lock")
+
+      runner.run("git commit -m '#{commit_message}'")
+      runner.run("git tag v#{to}")
+    rescue => e
+      raise ReleaseError.new("Failed to create commit or tag: #{e.message}", phase: PHASES[:commit_tag], version: to)
+    end
+
+    # Pushes the branch and tag to origin.
+    # If the  bumped version is not a beta version, it will open the GitHub Releases page.
+    #
+    # @raise [ReleaseError] if the push to origin fails
+    # @return [void]
+    def push_to_origin_and_open_release
+      @current_phase = PHASES[:push]
+      success = runner.run!("git push origin #{current_branch}").success?
+      success &= runner.run!("git push origin tag v#{to}").success?
+      raise ReleaseError.new("Failed to push to origin", phase: PHASES[:push], version: to) unless success
+
+      # Handle opening the GitHub Releases page
+      new_release_url = "https://github.com/#{REPO_NAME}/releases/new?tag=v#{to}"
+      unless to.include?("beta")
+        begin
+          runner.run("open #{new_release_url}")
+        rescue TTY::Command::ExitError => e
+          puts Apptweak::Styles.warn.call("Failed to open the GitHub release page: #{e.message}")
+          puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
+        rescue => e
+          # Catch any other unexpected errors when opening the URL
+          puts Apptweak::Styles.warn.call("Unexpected error when opening release page: #{e.message}")
+          puts Apptweak::Styles.info.call("Please create a release manually at: #{new_release_url}")
+        end
+      end
+    end
+
+    # Checks if the script was called from the right directory. Will exit if not
+    # @return [void]
+    def check_if_in_correct_directory
+      parent_dir = Pathname.new("#{__dir__}/..").realdirpath
+      current_dir = Pathname.new(Dir.pwd).realdirpath
+      return if parent_dir == current_dir
+
+      puts Apptweak::Styles.error.call("Oops. You need to run this script in the root of the `#{parent_dir.basename}` repository. You should run it with `./bin/new_release`")
+      exit(2)
+    end
+end
+
+ReleaseManager.new.do!
