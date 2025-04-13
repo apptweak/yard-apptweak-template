@@ -60,14 +60,14 @@ class ReleaseManager
   end
 
   REPO_NAME = "apptweak/yard-apptweak-template"
-  BRANCH_FOR_RELEASES = "main"
+  BRANCH_FOR_RELEASES = "develop"
   PROTECTED_MODE_VERSION_CHOICE = %w[beta patch].freeze
   VERSION_CHOICE = (%w[major minor patch] | PROTECTED_MODE_VERSION_CHOICE).freeze
 
   GEMS = {
     yard_apptweak_template: {
       name: "yard-apptweak-template",
-      file: "lib/yard-apptweak-template/version.rb"
+      file: "lib/yard_apptweak_template/version.rb"
     }
   }.freeze
 

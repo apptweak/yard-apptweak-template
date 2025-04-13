@@ -10,9 +10,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 150
-      - run: git fetch origin main --depth=100
+      - run: git fetch origin develop --depth=100
       - uses: apptweak/pronto-ruby@use_head_commit
         with:
-          target: origin/main
+          target: ${{ github.event.pull_request.base.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
