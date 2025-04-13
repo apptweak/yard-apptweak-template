@@ -1,0 +1,11 @@
+--title "AppTweak Template YARD Documentation"
+--no-api
+--protected
+--plugin apptweak-template
+--output-dir docs/yardoc
+
+bin/new_release
+lib/**/*.rb
+tools/*.rb
+-
+docs/*.md
