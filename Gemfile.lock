@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    yard-apptweak-template (2.0.1.beta.1)
+    yard-apptweak-template (2.0.1.beta.2)
       rouge (~> 3.26)
       yard (~> 0.9.37)
 
