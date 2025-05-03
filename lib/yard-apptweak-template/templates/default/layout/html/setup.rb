@@ -25,5 +25,4 @@ end
 # @return [Array<String>] list of stylesheet paths
 def stylesheets
   %w[css/style.css css/sketchup.css css/rubyapi.css css/apptweak.css]
-  # %w[css/style.css css/sketchup.css]
 end
