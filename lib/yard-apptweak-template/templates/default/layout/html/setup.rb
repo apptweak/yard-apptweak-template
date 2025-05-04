@@ -17,7 +17,7 @@ def javascripts
   #   upgrade we vendor jQuery of a newer version (1.x branch) along with their
   #   migration plugin to allow YARD to continue to work.
   #   https://github.com/lsegal/yard/pull/1351
-  %w[js/jquery.js js/jquery-migrate.js js/app.js]
+  %w[js/jquery.js js/jquery-migrate.js js/app.js js/full_list.js]
 end
 
 # Returns an array of stylesheet paths to include in the layout.erb file.
