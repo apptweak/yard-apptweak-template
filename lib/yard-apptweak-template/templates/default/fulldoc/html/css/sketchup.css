@@ -76,9 +76,6 @@ h2 small a {
 #su-content {
   background: #eef;
   width: 100%;
-  position: fixed;
-  top: 57px;
-  bottom: 0;
   display: flex;
   display: -webkit-flex;
   display: -ms-flexbox;

@@ -20,6 +20,9 @@ def javascripts
   %w[js/jquery.js js/jquery-migrate.js js/app.js]
 end
 
+# Returns an array of stylesheet paths to include in the layout.erb file.
+#
+# @return [Array<String>] list of stylesheet paths
 def stylesheets
-  %w[css/style.css css/sketchup.css css/rubyapi.css]
+  %w[css/style.css css/sketchup.css css/rubyapi.css css/apptweak.css]
 end

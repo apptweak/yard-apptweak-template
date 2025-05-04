@@ -1,0 +1,39 @@
+@font-face {
+  font-display: fallback;
+  font-family: "AvenirNext";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://app.apptweak.com/assets/avenir-next//36CE13_A_0.woff2") format("woff2"), url("http://app.apptweak.com/assets/avenir-next//36CE13_A_0.woff2") format("woff");
+  unicode-range: U+000-024F
+}
+
+@font-face {
+  font-display: fallback;
+  font-family: "AvenirNext";
+  font-style: normal;
+  font-weight: 500;
+  src: url("http://app.apptweak.com/assets/avenir-next//36CE13_B_0.woff2") format("woff2"), url("http://app.apptweak.com/assets/avenir-next//36CE13_B_0.woff") format("woff");
+  unicode-range: U+000-024F
+}
+
+@font-face {
+  font-display: fallback;
+  font-family: "AvenirNext";
+  font-style: italic;
+  font-weight: 500;
+  src: url("http://app.apptweak.com/assets/avenir-next//36CE13_9_0.woff2") format("woff2"), url("http://app.apptweak.com/assets/avenir-next//36CE13_9_0.woff") format("woff")
+}
+
+@font-face {
+  font-display: fallback;
+  font-family: "AvenirNext";
+  font-style: normal;
+  font-weight: 600;
+  src: local("AvenirNextLTPro-Demi"), url("http://app.apptweak.com/assets/avenir-next//36CE13_2_0.eot");
+  src: url("http://app.apptweak.com/assets/avenir-next//36CE13_2_0.woff2") format("woff2"), url("http://app.apptweak.com/assets/avenir-next//36CE13_2_0.woff") format("woff")
+}
+
+
+body, html {
+  font-family: "AvenirNext", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}

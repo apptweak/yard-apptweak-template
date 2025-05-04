@@ -1,15 +1,13 @@
   <meta charset="<%= charset %>">
-  <!-- VIEWPORT -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- AUTHOR and GENERATOR -->
-    <meta name="author" content="SketchUp Extensibility Team">
-    <meta name="generator" content="YARD https://yardoc.org">
-  <!-- TITLE -->
-    <title><% if object == "_index.html" || object == "index.html" %>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="AppTweak DevEx squad">
+  <meta name="generator" content="YARD https://yardoc.org">
+  <title><% if object == "_index.html" || object == "index.html" %>
     Alphabetic Index &mdash; <%= h options.title %><% else %>
     <%= h @page_title %><% if options.title && @page_title != options.title %> &mdash; <%= h options.title %><% end %><% end %>
-    </title>
-  <!-- SHORTCUT ICON -->
-    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
-    href="https://ruby.sketchup.com/favicon.ico" />
+  </title>
+  <link rel="apple-touch-icon" sizes="180x180" href="https://apptweak-blog.imgix.net/images/favicon/apple-touch-icon.png">
+  <link rel="mask-icon" href="https://apptweak-blog.imgix.net/images/favicon/safari-pinned-tab.svg" color="#C82C46">
+  <link rel="shortcut icon" href="https://apptweak-blog.imgix.net/images/favicon/favicon.ico">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="https://apptweak-blog.imgix.net/2023/10/apptweak-icon.svg">
 <%= erb(:embed_meta) %>
