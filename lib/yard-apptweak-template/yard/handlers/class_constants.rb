@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module ApptweakTemplateYARD
+  # Handles the definition of class constants defined in the Ruby code using
+  # the `DEFINE_RUBY_CLASS_CONSTANT` macro.
   class ClassConstantHandler < YARD::Handlers::C::Base
     MATCH = /\bDEFINE_RUBY_CLASS_CONSTANT\s*\(([^,]+)\s*,\s*([^,]+)\s*,\s*(\w+)\s*\)\s*;/xm
     handles MATCH

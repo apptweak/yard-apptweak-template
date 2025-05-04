@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module ApptweakTemplateYARD
+  # Handles the definition of class enum constants defined in the Ruby code
+  # using the `DEFINE_RUBY_CLASS_ENUM` macro.
   class ClassEnumConstantHandler < YARD::Handlers::C::Base
     MATCH = /\bDEFINE_RUBY_CLASS_ENUM\s*\(([^,]+)\s*,\s*(\w+)\s*\)\s*;/xm
     handles MATCH

@@ -2,6 +2,7 @@
 
 module ApptweakTemplateYARD
   module Stubs
+    # Generates the autoload file for the SketchUp API stubs.
     class AutoLoadGenerator
       # @param [YARD::CodeObject::Base] namespace_objects
       # @param [IO] out
@@ -20,7 +21,7 @@ module ApptweakTemplateYARD
 
       private
 
-        class Node
+        class Node # :nodoc:
           attr_reader :object, :dependencies
 
           def initialize(object)
@@ -53,7 +54,7 @@ module ApptweakTemplateYARD
           end
         end
 
-        class NodeFactory
+        class NodeFactory # :nodoc:
           def initialize
             @dependencies = {}
           end
