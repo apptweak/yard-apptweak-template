@@ -9,7 +9,9 @@ require_relative "yard-apptweak-template/yard/handlers/global_constants"
 require_relative "yard-apptweak-template/yard/html_helper"
 require_relative "yard-apptweak-template/patches/c_base_handler"
 
+# Module for Yard-related code.
 module ApptweakTemplateYARD
+  # Initialize the Yard-related code.
   def self.init
     # https://github.com/burtlo/yard-cucumber/blob/master/lib/yard-cucumber.rb
     # This registered template works for yardoc
@@ -28,6 +30,7 @@ module ApptweakTemplateYARD
     YARD::Tags::Library.visible_tags |= tags
   end
 
+  # @return [String] Path to the templates
   def self.templates_path
     File.join(__dir__, "yard-apptweak-template", "templates")
   end

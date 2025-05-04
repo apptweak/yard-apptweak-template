@@ -89,7 +89,7 @@ class ReleaseManager
     # Store initial state for potential rollback
     @initial_state = {
       branch: current_branch,
-      commit_sha: get_current_commit_sha
+      commit_sha: current_commit_sha
     }
     @current_phase = PHASES[:init]
 
@@ -162,7 +162,7 @@ class ReleaseManager
 
     # Get current commit SHA for potential rollback
     # @return [String] current commit SHA
-    def get_current_commit_sha
+    def current_commit_sha
       sha, _err = silent_runner.run("git rev-parse HEAD")
       sha.strip
     end

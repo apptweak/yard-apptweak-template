@@ -1,9 +1,21 @@
 # This gist contains the config for rubocop-performance >1.11 / rubocop >1.22, for ruby 3.0: https://gist.github.com/apptweak-ci/2aca83afffbcbe0c0bca2beaab1500c0
 inherit_from: https://gist.githubusercontent.com/apptweak-ci/2aca83afffbcbe0c0bca2beaab1500c0/raw/.rubocop.yml
 
-require:
+plugins:
+  - rubocop-performance
   - rubocop-rake
+
+require:
   - rubocop-yard
 
 Gemspec/RequireMFA:
   Enabled: false
+
+Naming/FileName:
+  Exclude:
+    - "lib/yard-apptweak-template.rb"
+
+Style/DocumentationMethod:
+  Exclude:
+    - "lib/yard-apptweak-template/stubs/**/*"
+    - "lib/yard-apptweak-template/templates/**/*"
