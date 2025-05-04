@@ -11,6 +11,4 @@ IFS=$'\n\t'
 # The -x (xtrace) flag makes bash print each command with variable substitutions
 set -vx
 
-bundle install
-lefthook install -f
-# Do any other automated setup that you need to do here
+bundle exec yard server --plugin apptweak-template --verbose --reload

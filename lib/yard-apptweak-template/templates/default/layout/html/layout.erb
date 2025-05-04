@@ -3,12 +3,11 @@
 <head>
   <%= erb(:headers) %>
   <!-- STYLESHEETS -->
-    <link rel="stylesheet" type="text/css"
-      href="https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic" />
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic" />
 <% stylesheets.each do |stylesheet| %>
-    <link rel="stylesheet" href="<%= url_for(stylesheet) %>" type="text/css" charset="utf-8" />
+  <link rel="stylesheet" href="<%= url_for(stylesheet) %>" type="text/css" charset="utf-8" />
 <% end %>
-    <link rel="stylesheet" href="<%= url_for('css/rouge.css') %>" type="text/css" charset="utf-8" />
+  <link rel="stylesheet" href="<%= url_for('css/rouge.css') %>" type="text/css" charset="utf-8" />
   <!-- SCRIPTS -->
 <%= erb :script_setup %>
 <% javascripts.each do |javascript| %>
@@ -29,7 +28,7 @@
 </head>
 <body>
 
-  <%= erb(:navbar) %>
+  <%#= erb(:navbar) %>
 
   <div id="su-content">
 
