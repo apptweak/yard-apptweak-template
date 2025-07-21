@@ -102,7 +102,7 @@ GEM
       faraday (>= 0.17.3, < 3)
     terminal-table (4.0.0)
       unicode-display_width (>= 1.1.1, < 4)
-    thor (0.20.3)
+    thor (1.4.0)
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
@@ -135,7 +135,7 @@ DEPENDENCIES
   rubocop-performance (~> 1.22)
   rubocop-rake (~> 0.6)
   rubocop-yard (~> 0.9)
-  thor (~> 0.19)
+  thor (~> 1.4)
   webrick
   yard-apptweak-template!
   yard-junk
